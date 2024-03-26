@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Chatbot</title>
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css" rel="stylesheet">
+  <style>
+    #chatWindow {
+      height: 400px;
+      overflow-y: scroll;
+    }
+    .chat-bubble {
+      padding: 10px 15px;
+      border-radius: 20px;
+      margin-bottom: 10px;
+      display: block;
+    }
+    .user-message {
+      background-color: #b3e5fc;
+      margin-left: auto;
+      margin-right: 0;
+    }
+    .ai-message {
+      background-color: #e1bee7;
+      margin-left: 0;
+      margin-right: auto;
+      position: relative;
+    }
+    .copy-button {
+      border: none;
+      background: none;
+      color: #007bff;
+      cursor: pointer;
+      position: absolute;
+      right: 10px;
+      top: 10px;
+    }
+    .spinner-border {
+      width: 1rem;
+      height: 1rem;
+      vertical-align: text-bottom;
+    }
+    .input-group-append .btn {
+      margin-left: 20px;
+      margin-right:20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container mt-5">
+    <h2 class="text-center mb-4">Chat UI (OpenAI ChatGPT 3.5 Turbo - Completions)</h2>
+    <div id="chatWindow" class="border rounded p-3"></div>
+    <div class="input-group mb-3 mt-3">
+      <input type="text" id="userInput" class="form-control" placeholder="Type your message here...">
+      <div class="input-group-append">
+        <button class="btn btn-primary" type="button" id="sendButton">Send</button>
+        <button class="btn btn-danger" type="button" id="stopButton" style="display: none;">Stop</button>
+        <button class="btn btn-secondary" type="button" id="clearButton">Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('sendButton').addEventListener('click', sendInput);
+    document.getElementById('clearButton').addEventListener('click', function() {
+      document.getElementById('chatWindow').innerHTML = '';
+    });
+    document.getElementById('userInput').addEventListener('keypress', function(event) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        sendInput();
+      }
+    });
+
+    let source;
+
+    function sendInput() {
+      let userInput = document.getElementById('userInput').value;
+      document.getElementById('userInput').value = '';
+      let chatWindow = document.getElementById('chatWindow');
+      let userBubble = `<div class='chat-bubble user-message'>${userInput}</div>`;
+      chatWindow.innerHTML += userBubble;
+      scrollToBottom(chatWindow);
+
+      let aiBubble = document.createElement('div');
+      aiBubble.className = 'chat-bubble ai-message';
+      aiBubble.innerHTML = '<div class="spinner-border text-primary" role="status"><span class="sr-only">Loading...</span></div>';
+      chatWindow.appendChild(aiBubble);
+      scrollToBottom(chatWindow);
+
+      document.getElementById('stopButton').style.display = 'inline-block';
+
+      let url = `server.php?input=${encodeURIComponent(userInput)}`;
+      source = new EventSource(url);
+
+      source.onmessage = function(event) {
+        if (event.data.trim() !== '[DONE]') {
+          let jsonData = event.data.replace(/^data: /, '');
+          let parsedData = JSON.parse(jsonData);
+
+          if (parsedData.choices && parsedData.choices.length > 0) {
+            let content = parsedData.choices[0].delta.content;
+            if (content) {
+              aiBubble.innerHTML += content;
+              scrollToBottom(chatWindow);
+            }
+          }
+        } else {
+          aiBubble.innerHTML += `<button class='copy-button' onclick='copyToClipboard(this)'><i class='far fa-copy'></i></button>`;
+          aiBubble.innerHTML = aiBubble.innerHTML.replace('<div class="spinner-border text-primary" role="status"><span class="sr-only">Loading...</span></div>', ''); // Remove spinner
+          document.getElementById('stopButton').style.display = 'none';
+          source.close();
+        }
+      };
+
+      source.onerror = function() {
+        console.error('EventSource failed.');
+        document.getElementById('stopButton').style.display = 'none';
+        source.close();
+      };
+    }
+
+    function scrollToBottom(element) {
+      element.scrollTop = element.scrollHeight;
+    }
+
+    document.getElementById('stopButton').addEventListener('click', function() {
+      if (source) {
+        source.close();
+        document.getElementById('stopButton').style.display = 'none';
+        let aiBubble = document.querySelector('.ai-message:last-child');
+        if (aiBubble) {
+          aiBubble.innerHTML = 'Response stopped by user.';
+        }
+      }
+    });
+
+    function copyToClipboard(button) {
+      let textToCopy = button.parentNode.textContent;
+      navigator.clipboard.writeText(textToCopy).then(function() {
+        console.log('Text copied to clipboard');
+      }).catch(function(err) {
+        console.error('Could not copy text: ', err);
+      });
+    }
+  </script>
+
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</body>
+</html>
+
