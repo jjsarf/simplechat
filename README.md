@@ -27,7 +27,7 @@ Set up a local server environment with Laragon:
 1. Navigate to Laragon's `www` directory, typically located at `C:\laragon\www`.
 2. Delete any files in the `www` directory if you want your chat application to be accessed directly via `http://localhost/`.
 3. Move the downloaded `client.html` and `server.php` files into the `www` directory.
-4. Open `server.php` with a text editor and replace `'sk-YOUR-OPENAI-KEY'` with your actual OpenAI API key in the `define('API_KEY', 'YOUR_API_KEY_HERE');` line.
+4. Open `server.php` with a text editor. Look for the line that says `define('API_KEY', 'sk-YOUR-OPENAI-KEY');`. Replace `'sk-YOUR-OPENAI-KEY'` with your actual OpenAI API key. For example, if your API key is `abc123`, the line should look like this: `define('API_KEY', 'abc123');`
 
 ## Step 5: Run Your Chat Application
 
