@@ -9,6 +9,7 @@ To communicate with the ChatGPT-3.5 model, you need an API key from OpenAI:
 1. Go to [OpenAI](https://openai.com/) and sign up or log in.
 2. Access your API keys by navigating to [your API dashboard](https://platform.openai.com/account/api-keys).
 3. Generate a new API key and save it securely.
+4. Make sure to setup a spending quota (i.e. $5/month) and to protect your API key. If you think you computer was compromized delete your key on the same website.
 
 ## Step 2: Download and Install Laragon
 
